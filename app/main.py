@@ -1,9 +1,12 @@
 import sys
 import re
+import configparser
 from threading import Thread
 import psycopg2
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
+
+CONFIG_FILE = 'config.ini'
 
 class DatabaseThread(QThread):
     databases_fetched = pyqtSignal(list)
@@ -129,25 +132,29 @@ class MainWindow(QWidget):
         self.show()
 
     def loadcredentials(self):
-        try:
-            with open('pgcon.txt','r') as f1:
-                content = f1.read()
-            pghost_match = re.search(r'Server=([^;]+);', content)
-            pgport_match = re.search(r'Port=([^;]+);', content)
-            pgpass_match = re.search(r'Password=([^;]+);', content)
-            pguser_match = re.search(r'User Id=([^;]+);', content)
+        config = configparser.ConfigParser()
+        config.read(CONFIG_FILE)
+        if 'PostgreSQL' in config:
+            self.pgHostInput.setText(config['PostgreSQL'].get('host', ''))
+            self.pgPortInput.setText(config['PostgreSQL'].get('port', ''))
+            self.pgUserInput.setText(config['PostgreSQL'].get('user', ''))
+            self.pgPasswordInput.setText(config['PostgreSQL'].get('password', ''))
+        else:
+            self.logWindow.append("No existing configuration found. Please enter your PostgreSQL credentials.")
 
-            if pghost_match and pgport_match and pguser_match and pgpass_match:
-                self.pgHostInput.setText(pghost_match.group(1))
-                self.pgPortInput.setText(pgport_match.group(1))
-                self.pgPasswordInput.setText(pgpass_match.group(1))
-                self.pgUserInput.setText(pguser_match.group(1))
-            else:
-                self.logWindow.append("Error: PostgreSQL Credentials not found in pgCon.txt")
-        except Exception as e:
-            self.logWindow.append(f'Error loading credentials from files: {e}')
+    def savecredentials(self):
+        config = configparser.ConfigParser()
+        config['PostgreSQL'] = {
+            'host': self.pgHostInput.text(),
+            'port': self.pgPortInput.text(),
+            'user': self.pgUserInput.text(),
+            'password': self.pgPasswordInput.text()
+        }
+        with open(CONFIG_FILE, 'w') as configfile:
+            config.write(configfile)
 
     def fetchDatabases(self):
+        self.savecredentials()
         self.logWindow.append("Fetching databases...")
         credentials = {
             'host': self.pgHostInput.text(),
@@ -161,6 +168,7 @@ class MainWindow(QWidget):
         self.db_thread.start()
 
     def runQuery(self):
+        self.savecredentials()
         selected_db = [item.text() for item in self.db_list_widget.selectedItems()]
         if not selected_db:
             QMessageBox.critical(self,"Warning!",'No database has been selected')
