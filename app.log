@@ -1,0 +1,13 @@
+2024-07-28 14:46:48,520 - INFO - Databases fetched successfully.
+2024-07-28 14:47:03,913 - ERROR - Error executing query on database ginesys: syntax error at end of input
+LINE 1: Insert into a
+                     ^
+
+2024-07-28 14:47:03,913 - INFO - Query executed. Check the log window for results.
+2024-07-28 14:47:29,636 - INFO - Query executed. Check the log window for results.
+2024-07-28 17:45:45,667 - INFO - Databases fetched successfully.
+2024-07-28 17:46:03,548 - ERROR - Error executing query on database ginesys2.0: column "id" of relation "admerraudit" does not exist
+LINE 1: insert into main.admerraudit (id) select i from generate_ser...
+                                      ^
+
+2024-07-28 17:46:03,548 - INFO - Query executed. Check the log window for results.
